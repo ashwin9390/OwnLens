@@ -1,0 +1,119 @@
+\documentclass[10pt,twocolumn,letterpaper]{article}
+
+\usepackage{times}
+\usepackage{epsfig}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{hyperref}
+\usepackage{booktabs}
+
+\title{OwnLens: A Context-Aware, User-Permissioned Framework for Egocentric Robot Learning}
+
+\author{
+Ashwin \\
+Independent Researcher \\
+{\tt\small github.com/ashwin9390/ownlens}
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+First-person (egocentric) video captured via smart glasses has emerged as a data source for training robot manipulation policies, reducing reliance on costly teleoperation. However, current data collection paradigms are largely organized around centralized, enterprise-driven platforms with one-time, monolithic consent agreements, and consumer-style permission models are known to be insufficient for continuous, passive wearable capture. We introduce \textbf{OwnLens}, an open specification and architecture that establishes a security and permission layer between egocentric sensors and robot learning pipelines, so that an individual can teach their own robot their own tasks while retaining fine-grained control over what is captured, stored, shared, and trained on. We describe a context-aware permission engine, on-device redaction, purpose-limited consent scopes, a manifest format compatible with existing robot dataset tooling, robot-side policy enforcement, and provenance/revocation, and we discuss the limits of these mechanisms, particularly around neural-network unlearning. This document is published as a defensive disclosure.
+\end{abstract}
+
+\section{Introduction}
+
+Training general-purpose robot manipulation policies is bottlenecked by the cost of robot demonstration data. Egocentric video captured by a wearable device offers a cheaper alternative: a person performs a task while wearing a camera, and the resulting first-person perspective closely matches what a robot's own vision system needs. Recent systems have shown this can substantially reduce the amount of robot-specific data required to learn a task.
+
+Two gaps motivate this work.
+
+\textbf{Ownership gap.} Large-scale egocentric collection is largely organized around companies or research labs collecting from workers or contributors as data sources. There is comparatively little open tooling for an individual who wants to teach a robot \emph{their own} routine, retain the data, and decide what may be done with it.
+
+\textbf{Control gap.} Smart glasses record continuously in whatever direction the wearer looks, capturing bystanders, private documents, screens, and sensitive spaces. Mobile-style install-time and run-time permissions were designed for discrete, app-initiated requests and are widely regarded as insufficient for continuous, passive wearable capture.
+
+This paper contributes an architecture and open specification, not a new learning algorithm.
+
+\section{Related Work}
+
+\textbf{Learning from egocentric human data.} EgoMimic co-trains on wearable hand-tracking data and robot data to scale imitation learning. EgoZero trains manipulation policies from in-the-wild smart-glasses data with minimal per-task demonstrations. EMMA extends this approach to mobile manipulation. Ego4D and Ego-Exo4D provide large-scale first-person datasets used broadly across this line of work.
+
+\textbf{Data collection infrastructure.} EgoVerse aggregates academic, industry, and phone-based egocentric data collection. EgoKit unifies recording workflows across heterogeneous capture devices, including phones, smart glasses, and XR headsets. Hugging Face's LeRobot provides a hardware-agnostic robot control interface and a standard dataset format.
+
+\textbf{Privacy and consent for wearable capture.} Prior work on smart-glasses access control describes the evolution from install-time to run-time to dynamic, context-aware permission models, arguing that run-time prompts alone are insufficient for continuous capture. Industry data-collection practice guides describe consent protocols and bystander handling from the perspective of the collecting organization, rather than the individual wearer.
+
+\textbf{Gap addressed here.} To the best of our knowledge (based on a non-exhaustive literature and patent survey, not a formal freedom-to-operate search), no existing open specification combines demonstrator-owned data, context-aware permissions, purpose-separated consent, robot-side enforcement, and dataset-level manifests into a single architecture.
+
+\section{Problem Statement and Threat Model}
+
+\textbf{Actors.} Demonstrator (wearer), bystanders, robot owner (often the demonstrator), robot manufacturer, glasses manufacturer, model/dataset developers, and downstream buyers.
+
+\textbf{Assets.} Raw video/audio, derived hand and head poses, task labels, trained policies, and the environment map of the demonstrator's home or workplace.
+
+\textbf{Threats.}
+\begin{itemize}
+  \item \textbf{Over-collection}: capturing bystanders, screens, documents, or sensitive spaces incidentally.
+  \item \textbf{Purpose creep}: data consented for one purpose (e.g., personal robot teaching) reused for another (e.g., foundation-model training).
+  \item \textbf{Silent upload}: raw footage leaving the device without the wearer's knowledge.
+  \item \textbf{Robot overreach}: a trained robot acting outside the permissions its owner intended.
+  \item \textbf{Irrevocability}: inability to meaningfully withdraw data after it has been used for training.
+\end{itemize}
+
+\textbf{Non-goals.} This work does not address adversarial hardware or firmware tampering, and does not constitute legal advice for any specific jurisdiction.
+
+\section{System Architecture}
+
+OwnLens consists of four modules:
+
+\begin{itemize}
+  \item \textbf{Context-aware geofencing} — capture permission is a function of place, detected people, detected content (e.g., screens/documents), task, and time, with a default-deny posture, rather than a single always-on/off toggle.
+  \item \textbf{On-device feature minimization} — redaction (face blur, screen/document masking) and, where full appearance detail is unnecessary, conversion to hand/object keypoint trajectories, executed before data leaves the wearer's device.
+  \item \textbf{Machine-readable manifest schema} — a consent manifest attached to every dataset episode, separating capture, local-training, sharing, third-party-training, and retention scopes, designed to sit alongside existing dataset metadata (e.g., LeRobot's format).
+  \item \textbf{Robot-side policy enforcement} — the robot runtime checks the owner's policy and each episode's manifest before acting, recording, or incorporating an episode into training, and maintains a provenance record linking trained task behavior back to source episodes for later revocation.
+\end{itemize}
+
+\subsection{Per-task policy splitting}
+
+A design option worth highlighting: rather than merging all demonstrations into one jointly-trained policy, each user-specific task can be trained as a separate, small adapter on top of a frozen general base policy. Revoking a task then reduces to deleting that adapter — a practically achievable form of data removal. This does not extend to data that has already contributed to a jointly-trained base or foundation model, where the general unlearning limitation below still applies.
+
+\section{Discussion}
+
+\textbf{Labor implications.} A system that learns a person's tasks can, in principle, automate parts of that person's job. Who controls the resulting data changes who benefits: an individual teaching a robot their own household routine differs materially from a worker's demonstrations being captured for an employer's or vendor's model without the worker's ongoing say over reuse. Consent for personal use should not silently extend to employer or third-party model training.
+
+\textbf{Consent quality.} Fine-grained permission systems risk consent fatigue. Sensible defaults, task-level templates, and periodic review prompts are necessary; evaluating their usability is left to future work.
+
+\textbf{Bystanders.} The wearer's own consent does not, and cannot, cover bystanders. Local, on-device-only processing by default, pause-on-unrecognized-person behavior, and clear physical recording indicators reduce, but do not eliminate, this risk.
+
+\section{Open Problems}
+
+\begin{itemize}
+  \item Reliable, low-latency on-device redaction on glasses-class hardware.
+  \item Machine unlearning for jointly-trained policies built on revoked data.
+  \item Standardizing a permission manifest across heterogeneous dataset formats.
+  \item Empirical usability evaluation of permission defaults with real users.
+  \item Enforcing robot-side policy against modified or malicious robot software.
+  \item Quantifying the task-learning cost of strict minimization (e.g., keypoint-only capture) versus full-frame capture.
+\end{itemize}
+
+\section{Conclusion}
+
+We proposed OwnLens, an open, hardware-agnostic architecture for user-owned, permissioned egocentric teaching of personal robots: context-aware permissions, on-device minimization, purpose-limited consent, dataset manifests, robot-side enforcement, and provenance. It is published as a defensive disclosure of these mechanisms so that they remain available to the open community. Reference implementation, formal schema stabilization, and user studies are left to future work.
+
+\begin{thebibliography}{9}
+
+\bibitem{egomimic} S. Kareer et al., ``EgoMimic: Scaling Imitation Learning via Egocentric Video,'' arXiv:2410.24221, 2024.
+\bibitem{egozero} ``EgoZero: Robot Learning from Smart Glasses,'' arXiv:2505.20290, 2025.
+\bibitem{emma} ``EMMA: Scaling Mobile Manipulation via Egocentric Human Data,'' arXiv:2509.04443, 2025.
+\bibitem{egoverse} ``EgoVerse: An Egocentric Human Dataset for Robot Learning from Around the World,'' arXiv:2604.07607, 2026.
+\bibitem{egokit} ``EgoKit: Towards Unified Low-Cost Egocentric Data Collection with Heterogeneous Devices,'' arXiv:2605.16797, 2026.
+\bibitem{ego4d} K. Grauman et al., ``Ego4D: Around the World in 3,000 Hours of Egocentric Video,'' CVPR, 2022.
+\bibitem{lerobot} Hugging Face, ``LeRobot,'' \url{https://github.com/huggingface/lerobot}.
+\bibitem{glasses-privacy} ``Evaluating the Efficacy of Large Language Models for Generating Fine-Grained Visual Privacy Policies in Homes,'' arXiv:2508.00321, 2025.
+
+\end{thebibliography}
+
+\textit{Note: verify every reference against the original source, and extend this list with anything found in a fuller literature and patent search, before submission.}
+
+\end{document}

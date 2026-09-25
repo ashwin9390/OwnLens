@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "OwnLens Robot Policy Schema",
+  "version": "0.1",
+  "type": "object",
+  "description": "Owner-defined policy loaded by a robot runtime, governing where/what the robot may do and record. Referenced by spec/RUNTIME.md.",
+  "required": ["policy_version", "owner_id", "allowed_zones", "task_permissions", "recording"],
+  "properties": {
+    "policy_version": { "type": "string" },
+    "owner_id": { "type": "string" },
+    "allowed_zones": {
+      "type": "array",
+      "description": "Geofence or room identifiers the robot may operate in.",
+      "items": { "type": "string" }
+    },
+    "task_permissions": {
+      "type": "array",
+      "description": "Tasks the robot is permitted to execute, each tied to the manifest-derived episodes it was trained from.",
+      "items": {
+        "type": "object",
+        "required": ["task", "enabled", "trained_from_episodes"],
+        "properties": {
+          "task": { "type": "string" },
+          "enabled": { "type": "boolean" },
+          "trained_from_episodes": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Episode IDs (matching manifest.json episode_id values) this task's policy/adapter was trained on, for provenance and revocation."
+          }
+        }
+      }
+    },
+    "recording": {
+      "type": "object",
+      "required": ["robot_may_record", "upload_allowed"],
+      "properties": {
+        "robot_may_record": { "type": "boolean" },
+        "upload_allowed": { "type": "boolean" }
+      }
+    },
+    "retention_days": { "type": "integer" }
+  }
+}

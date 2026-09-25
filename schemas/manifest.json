@@ -1,0 +1,82 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "OwnLens Manifest Schema",
+  "version": "0.1",
+  "type": "object",
+  "required": [
+    "manifest_version",
+    "episode_id",
+    "timestamp",
+    "capture_device",
+    "context",
+    "redaction",
+    "consent",
+    "provenance"
+  ],
+  "properties": {
+    "manifest_version": { "type": "string" },
+    "episode_id": { "type": "string" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "capture_device": {
+      "type": "object",
+      "required": ["type", "vendor", "firmware"],
+      "properties": {
+        "type": { "type": "string" },
+        "vendor": { "type": "string" },
+        "firmware": { "type": "string" }
+      }
+    },
+    "context": {
+      "type": "object",
+      "required": ["place", "task", "geofence_id"],
+      "properties": {
+        "place": { "type": "string" },
+        "task": { "type": "string" },
+        "geofence_id": { "type": "string" }
+      }
+    },
+    "redaction": {
+      "type": "object",
+      "required": ["faces", "screens", "documents", "audio", "output_mode"],
+      "properties": {
+        "faces": { "type": "string" },
+        "screens": { "type": "string" },
+        "documents": { "type": "string" },
+        "audio": { "type": "string" },
+        "output_mode": { "type": "string" }
+      }
+    },
+    "consent": {
+      "type": "object",
+      "required": [
+        "local_training",
+        "share_with_peers",
+        "third_party_foundation_training",
+        "retention_days",
+        "revocable"
+      ],
+      "properties": {
+        "local_training": { "type": "boolean" },
+        "share_with_peers": { "type": "boolean" },
+        "third_party_foundation_training": { "type": "boolean" },
+        "retention_days": { "type": "integer" },
+        "revocable": { "type": "boolean" }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["sha256_hash", "signature"],
+      "properties": {
+        "sha256_hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "Lowercase hex SHA-256 digest of the episode's serialized trajectory/media payload."
+        },
+        "signature": {
+          "type": "string",
+          "description": "Device- or user-key signature over sha256_hash (e.g. DER-encoded ECDSA, base64 or hex). Implementations MUST NOT ship a literal placeholder value in production manifests."
+        }
+      }
+    }
+  }
+}
