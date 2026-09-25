@@ -7,9 +7,9 @@
 
 ## Overview
 
-**OwnLens** is an open specification and software architecture designed to help make smart-glasses robot teaching more private, customizable, and user-controlled.
+**OwnLens** is an open specification and software architecture designed to help make smart-glasses-based robot teaching more private, customizable, and user-controlled.
 
-While frameworks like Hugging Face [LeRobot](https://github.com/huggingface/lerobot) make robot policy training hardware-agnostic, egocentric video streams can inadvertently capture sensitive surround[...]
+While frameworks like Hugging Face [LeRobot](https://github.com/huggingface/lerobot) make robot policy training hardware-agnostic, egocentric video streams can inadvertently capture sensitive surroundings and private interactions.
 
 ---
 
@@ -21,13 +21,13 @@ While frameworks like Hugging Face [LeRobot](https://github.com/huggingface/lero
 > - **Not legal advice.** This specification and its schemas are technical privacy tools, not a substitute for legal compliance advice across jurisdictions.
 > - **Redaction is best-effort.** Automated computer-vision redaction reduces exposure; it is not a guarantee against visual data leakage. Review before sharing.
 > - **Hardware trust assumed.** OwnLens assumes the device OS running capture and redaction is not itself compromised or tampered with; it does not defend against malicious hardware or firmware.
-> - **Unlearning is limited.** Revoking consent for an episode reliably prevents *future* training runs on it and (where policies are split per task — see Architecture Notes below) can remove a task[...]
+> - **Unlearning is limited.** Revoking consent for an episode reliably prevents *future* training runs on it and (where policies are split per task — see Architecture Notes below) can remove a task from future training pipelines, but it does not guarantee removal from every previously trained or merged model artifact.
 
 ---
 
 ## Why OwnLens?
 
-Egocentric learning systems (e.g., EgoMimic, EgoZero, EMMA, EgoVerse, EgoKit) rely on continuous first-person demonstration data. Existing collection paradigms are often organized around enterprise ne[...]
+Egocentric learning systems (e.g., EgoMimic, EgoZero, EMMA, EgoVerse, EgoKit) rely on continuous first-person demonstration data. Existing collection paradigms are often organized around enterprise-scale data pipelines and consent practices that are not aligned with personal, local, or user-controlled robotics.
 
 OwnLens proposes a **local-first, user-owned architecture**:
 
@@ -66,9 +66,9 @@ OwnLens proposes a **local-first, user-owned architecture**:
   └───────────────────────────────────────────────────────────┘
 ```
 
-- **Vendor-agnostic capture adapter** — designed to support research egocentric platforms (e.g., Project Aria) and consumer devices where raw-stream access is available, via a standardized sensor-st[...]
+- **Vendor-agnostic capture adapter** — designed to support research egocentric platforms (e.g., Project Aria) and consumer devices where raw-stream access is available, via a standardized sensor interface.
 - **Context-aware rules** — policy definitions can use spatial signals, paired markers, or visual tags to auto-pause or restrict capture in designated areas (e.g., bathrooms, restricted desks).
-- **On-device feature minimization** — local models blur faces, mask monitors, and strip identifying detail before anything is saved to disk; converts raw video into hand/object keypoint trajectorie[...]
+- **On-device feature minimization** — local models blur faces, mask monitors, and strip identifying detail before anything is saved to disk; converts raw video into hand/object keypoint trajectories and other privacy-preserving features.
 - **Purpose-limited consent scopes** — separates capture rights from local training, multi-robot sharing, third-party model contributions, and retention lifecycle.
 - **LeRobot-compatible permission manifests** — lightweight JSON metadata alongside standard robot dataset formats.
 - **Robot-side policy enforcement** — the robot runtime validates each episode's manifest before fine-tuning or memory ingestion, refusing out-of-bounds or revoked data.
@@ -76,13 +76,13 @@ OwnLens proposes a **local-first, user-owned architecture**:
 
 ### Architecture note: per-task policy splitting
 
-One design option worth calling out explicitly: keep a general base robot policy frozen, and train each user-specific task as a small, separate adapter (e.g., a LoRA-style module) rather than merging [...]
+One design option worth calling out explicitly: keep a general base robot policy frozen, and train each user-specific task as a small, separate adapter (e.g., a LoRA-style module) rather than merging all user data into one monolithic policy.
 
 ---
 
 ## Permission Manifest (v0.1)
 
-Each episode captured via OwnLens generates a `manifest.json` file stored alongside dataset trajectories:
+Each episode captured via OwnLens generates a `manifest.json` file stored alongside the dataset trajectories:
 
 ```json
 {
@@ -121,7 +121,7 @@ Each episode captured via OwnLens generates a `manifest.json` file stored alongs
 }
 ```
 
-> The `signature` field above is illustrative only — do not copy it into a real manifest. It's a placeholder for a device- or user-key signature (e.g., DER-encoded ECDSA) that would let a verifier c[...]
+> The `signature` field above is illustrative only — do not copy it into a real manifest. It's a placeholder for a device- or user-key signature (e.g., DER-encoded ECDSA) that would let a verifier confirm provenance and integrity.
 
 See [`schemas/manifest.json`](schemas/manifest.json) for the formal schema, and [`schemas/policy.json`](schemas/policy.json) for the robot-side policy schema referenced in `spec/RUNTIME.md`.
 
@@ -132,7 +132,7 @@ See [`schemas/manifest.json`](schemas/manifest.json) for the formal schema, and 
 Current and planned project structure:
 
 ```text
-ownlens/
+OwnLens/
 ├── spec/               # Formal specification, threat model, & RFCs
 │   ├── MANIFEST.md     # Permission manifest schema spec
 │   ├── REDACTION.md    # On-device processing standards
