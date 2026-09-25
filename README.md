@@ -181,9 +181,8 @@ Full citations are in [`paper/`](paper/).
 
 ## Maintainers
 
-- Ashwin — [@ashwin9390](https://github.com/ashwin9390)
+- Ashwin H — [@ashwin9390](https://github.com/ashwin9390)
 
-*(Contact details intentionally omitted from this draft — add a preferred public contact channel before publishing, per your own preference on exposing a personal email.)*
 
 ## License
 
