@@ -9,7 +9,7 @@
 
 **OwnLens** is an open specification and software architecture designed to help make smart-glasses robot teaching more private, customizable, and user-controlled.
 
-While frameworks like Hugging Face [LeRobot](https://github.com/huggingface/lerobot) make robot policy training hardware-agnostic, egocentric video streams can inadvertently capture sensitive surroundings — bystanders, private screens, personal documents, and intimate home environments. OwnLens proposes a permission and processing layer that sits between egocentric video capture devices and robot policy training, enforcing local best-effort redaction, fine-grained consent manifests, and runtime policy restrictions.
+While frameworks like Hugging Face [LeRobot](https://github.com/huggingface/lerobot) make robot policy training hardware-agnostic, egocentric video streams can inadvertently capture sensitive surround[...]
 
 ---
 
@@ -21,13 +21,13 @@ While frameworks like Hugging Face [LeRobot](https://github.com/huggingface/lero
 > - **Not legal advice.** This specification and its schemas are technical privacy tools, not a substitute for legal compliance advice across jurisdictions.
 > - **Redaction is best-effort.** Automated computer-vision redaction reduces exposure; it is not a guarantee against visual data leakage. Review before sharing.
 > - **Hardware trust assumed.** OwnLens assumes the device OS running capture and redaction is not itself compromised or tampered with; it does not defend against malicious hardware or firmware.
-> - **Unlearning is limited.** Revoking consent for an episode reliably prevents *future* training runs on it and (where policies are split per task — see Architecture Notes below) can remove a task-specific adapter. Removing an episode's influence from an *already-trained, jointly-trained* model remains an open research problem.
+> - **Unlearning is limited.** Revoking consent for an episode reliably prevents *future* training runs on it and (where policies are split per task — see Architecture Notes below) can remove a task[...]
 
 ---
 
 ## Why OwnLens?
 
-Egocentric learning systems (e.g., EgoMimic, EgoZero, EMMA, EgoVerse, EgoKit) rely on continuous first-person demonstration data. Existing collection paradigms are often organized around enterprise needs and one-time consent agreements.
+Egocentric learning systems (e.g., EgoMimic, EgoZero, EMMA, EgoVerse, EgoKit) rely on continuous first-person demonstration data. Existing collection paradigms are often organized around enterprise ne[...]
 
 OwnLens proposes a **local-first, user-owned architecture**:
 
@@ -66,9 +66,9 @@ OwnLens proposes a **local-first, user-owned architecture**:
   └───────────────────────────────────────────────────────────┘
 ```
 
-- **Vendor-agnostic capture adapter** — designed to support research egocentric platforms (e.g., Project Aria) and consumer devices where raw-stream access is available, via a standardized sensor-streaming interface. *Consumer smart-glasses raw-camera access varies by vendor and firmware version — verify current SDK capabilities before committing to a specific device.*
+- **Vendor-agnostic capture adapter** — designed to support research egocentric platforms (e.g., Project Aria) and consumer devices where raw-stream access is available, via a standardized sensor-st[...]
 - **Context-aware rules** — policy definitions can use spatial signals, paired markers, or visual tags to auto-pause or restrict capture in designated areas (e.g., bathrooms, restricted desks).
-- **On-device feature minimization** — local models blur faces, mask monitors, and strip identifying detail before anything is saved to disk; converts raw video into hand/object keypoint trajectories when full frames aren't needed for the task.
+- **On-device feature minimization** — local models blur faces, mask monitors, and strip identifying detail before anything is saved to disk; converts raw video into hand/object keypoint trajectorie[...]
 - **Purpose-limited consent scopes** — separates capture rights from local training, multi-robot sharing, third-party model contributions, and retention lifecycle.
 - **LeRobot-compatible permission manifests** — lightweight JSON metadata alongside standard robot dataset formats.
 - **Robot-side policy enforcement** — the robot runtime validates each episode's manifest before fine-tuning or memory ingestion, refusing out-of-bounds or revoked data.
@@ -76,7 +76,7 @@ OwnLens proposes a **local-first, user-owned architecture**:
 
 ### Architecture note: per-task policy splitting
 
-One design option worth calling out explicitly: keep a general base robot policy frozen, and train each user-specific task as a small, separate adapter (e.g., a LoRA-style module) rather than merging everything into one jointly-trained model. Revoking a task then means deleting that adapter — a real, working form of "unlearning" — rather than needing to unlearn from a merged model, which is not currently solved. This only holds if the user's data never entered the shared/base model; anything contributed to a jointly-trained foundation model inherits the general unlearning limitation above.
+One design option worth calling out explicitly: keep a general base robot policy frozen, and train each user-specific task as a small, separate adapter (e.g., a LoRA-style module) rather than merging [...]
 
 ---
 
@@ -121,7 +121,7 @@ Each episode captured via OwnLens generates a `manifest.json` file stored alongs
 }
 ```
 
-> The `signature` field above is illustrative only — do not copy it into a real manifest. It's a placeholder for a device- or user-key signature (e.g., DER-encoded ECDSA) that would let a verifier confirm the manifest wasn't altered after capture.
+> The `signature` field above is illustrative only — do not copy it into a real manifest. It's a placeholder for a device- or user-key signature (e.g., DER-encoded ECDSA) that would let a verifier c[...]
 
 See [`schemas/manifest.json`](schemas/manifest.json) for the formal schema, and [`schemas/policy.json`](schemas/policy.json) for the robot-side policy schema referenced in `spec/RUNTIME.md`.
 
@@ -129,7 +129,9 @@ See [`schemas/manifest.json`](schemas/manifest.json) for the formal schema, and 
 
 ## Repository Layout
 
-```
+Current and planned project structure:
+
+```text
 ownlens/
 ├── spec/               # Formal specification, threat model, & RFCs
 │   ├── MANIFEST.md     # Permission manifest schema spec
@@ -138,10 +140,10 @@ ownlens/
 ├── schemas/            # JSON Schema definitions (v0.1)
 │   ├── manifest.json
 │   └── policy.json
-├── adapters/           # Hardware capture adapters (empty — contributions welcome)
-├── redaction/          # Reference redaction pipelines (empty — contributions welcome)
-├── lerobot-ext/        # Hugging Face LeRobot dataset extension (empty — contributions welcome)
-├── docs/               # Threat model and FAQ (empty — contributions welcome)
+├── adapters/           # Hardware capture adapters (planned)
+├── redaction/          # Reference redaction pipelines (planned)
+├── lerobot-ext/        # Hugging Face LeRobot dataset extension (planned)
+├── docs/               # Threat model and FAQ (planned)
 └── paper/              # Defensive-publication / arXiv draft
 ```
 
@@ -183,11 +185,10 @@ Full citations are in [`paper/`](paper/).
 
 - Ashwin H — [@ashwin9390](https://github.com/ashwin9390)
 
-
 ## License
 
-- **Code and implementations:** Apache-2.0 (includes an explicit patent grant)
-- **Specification and documentation:** CC-BY-4.0
+- **Code and implementations:** [Apache License 2.0](LICENSE) (includes an explicit patent grant)
+- **Specification and documentation:** [Creative Commons Attribution 4.0 International](https://creativecommons.org/licenses/by/4.0/)
 
 ## Contributing
 
